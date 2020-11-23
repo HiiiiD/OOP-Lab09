@@ -42,7 +42,7 @@ public final class LambdaFilter extends JFrame {
         NUMBEROFCHARS("Number of chars", countNumberOfCharsFunction()),
         NUMBEROFLINES("Number of lines", countNumberOfLinesFunction()),
         LISTALLWORDS("List all words", listAllWordsFunction()),
-        COUNTOCCURRENCESOFWORDS("Count occurrences of the words", countOccurrencesOfWords());
+        COUNTOCCURRENCESOFWORDS("Count occurrences of the words", countOccurrencesOfWordsFunction());
 
         private final String commandName;
         private final Function<String, String> fun;
@@ -86,7 +86,7 @@ public final class LambdaFilter extends JFrame {
             return s.lines().flatMap(line -> Stream.of(line.split(" ")));
         }
 
-        public static Function<String, String> countOccurrencesOfWords() {
+        public static Function<String, String> countOccurrencesOfWordsFunction() {
             return inputString -> {
                 return listAllWordsStream(inputString).collect(Collectors.groupingBy(word -> word)).entrySet().stream()
                         .map(entry -> entry.getKey() + "->" + entry.getValue().size())
