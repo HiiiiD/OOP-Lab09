@@ -7,6 +7,8 @@ import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -16,8 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
 /**
- * Modify this small program adding new filters.
- * Realize this exercise using as much as possible the Stream library.
+ * Modify this small program adding new filters. Realize this exercise using as
+ * much as possible the Stream library.
  * 
  * 1) Convert to lowercase
  * 
@@ -27,7 +29,8 @@ import javax.swing.JTextArea;
  * 
  * 4) List all the words in alphabetical order
  * 
- * 5) Write the count for each word, e.g. "word word pippo" should output "pippo -> 1 word -> 2"
+ * 5) Write the count for each word, e.g. "word word pippo" should output "pippo
+ * -> 1 word -> 2"
  *
  */
 public final class LambdaFilter extends JFrame {
@@ -35,29 +38,66 @@ public final class LambdaFilter extends JFrame {
     private static final long serialVersionUID = 1760990730218643730L;
 
     private enum Command {
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()), TOLOWERCASE("To lower case", toLowerCaseFunction()),
+        NUMBEROFCHARS("Number of chars", countNumberOfCharsFunction()),
+        NUMBEROFLINES("Number of lines", countNumberOfLinesFunction()),
+        LISTALLWORDS("List all words", listAllWordsFunction()),
+        COUNTOCCURRENCESOFWORDS("Count occurrences of the words", countOccurrencesOfWords());
 
         private final String commandName;
         private final Function<String, String> fun;
 
         Command(final String name, final Function<String, String> process) {
-            commandName = name;
-            fun = process;
+            this.commandName = name;
+            this.fun = process;
         }
 
         @Override
         public String toString() {
-            return commandName;
+            return this.commandName;
         }
 
         public String translate(final String s) {
-            return fun.apply(s);
+            return this.fun.apply(s);
+        }
+
+        private static Function<String, String> toLowerCaseFunction() {
+            return inputString -> {
+                return inputString.chars().map(characterCodePoint -> Character.toLowerCase(characterCodePoint))
+                        .mapToObj(characterCodePoint -> Character.toString(characterCodePoint))
+                        .reduce("", (stringifiedChar1, stringifiedChar2) -> stringifiedChar1 + stringifiedChar2);
+            };
+        }
+
+        private static Function<String, String> countNumberOfCharsFunction() {
+            return inputString -> String.valueOf(inputString.chars().count());
+        }
+
+        private static Function<String, String> countNumberOfLinesFunction() {
+            return inputString -> String.valueOf(inputString.lines().count());
+        }
+
+        private static Function<String, String> listAllWordsFunction() {
+            return inputString -> listAllWordsStream(inputString).sorted().reduce("",
+                    (string1, string2) -> string1 + "\n" + string2);
+        }
+
+        private static Stream<String> listAllWordsStream(final String s) {
+            return s.lines().flatMap(line -> Stream.of(line.split(" ")));
+        }
+
+        public static Function<String, String> countOccurrencesOfWords() {
+            return inputString -> {
+                return listAllWordsStream(inputString).collect(Collectors.groupingBy(word -> word)).entrySet().stream()
+                        .map(entry -> entry.getKey() + "->" + entry.getValue().size())
+                        .reduce("", (string1, string2) -> string1 + "\n" + string2);
+            };
         }
     }
 
     private LambdaFilter() {
         super("Lambda filter GUI");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         final JPanel panel1 = new JPanel();
         final LayoutManager layout = new BorderLayout();
         panel1.setLayout(layout);
@@ -75,12 +115,12 @@ public final class LambdaFilter extends JFrame {
         final JButton apply = new JButton("Apply");
         apply.addActionListener(ev -> right.setText(((Command) combo.getSelectedItem()).translate(left.getText())));
         panel1.add(apply, BorderLayout.SOUTH);
-        setContentPane(panel1);
+        this.setContentPane(panel1);
         final Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         final int sw = (int) screen.getWidth();
         final int sh = (int) screen.getHeight();
-        setSize(sw / 4, sh / 4);
-        setLocationByPlatform(true);
+        this.setSize(sw / 4, sh / 4);
+        this.setLocationByPlatform(true);
     }
 
     /**
