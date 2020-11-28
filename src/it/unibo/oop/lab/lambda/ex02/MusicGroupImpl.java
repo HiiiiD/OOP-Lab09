@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -97,9 +98,11 @@ public final class MusicGroupImpl implements MusicGroup {
      */
     @Override
     public Optional<String> longestAlbum() {
-        return this.albums.entrySet().stream()
-                .max((albumEntry1, albumEntry2) -> albumEntry1.getValue().compareTo(albumEntry2.getValue()))
-                .map(albumEntry -> albumEntry.getKey());
+        return this.songsWithAlbumName()
+                .collect(Collectors.groupingBy(song -> song.getAlbumName(),
+                        Collectors.summingDouble(song -> song.getDuration())))
+                .entrySet().stream().max((entry1, entry2) -> entry1.getValue().compareTo(entry2.getValue()))
+                .map(entry -> entry.getKey().get());
     }
 
     /**
